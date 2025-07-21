@@ -75,6 +75,7 @@ class Predict(BlockwiseTask):
 
     fit: Literal["overhang"] = "overhang"
     read_write_conflict: Literal[False] = False
+    context_override: tuple[PydanticCoordinate, PydanticCoordinate] | None = None
     _out_array_dtype: np.dtype = np.dtype(np.uint8)
 
     @property
@@ -98,8 +99,19 @@ class Predict(BlockwiseTask):
         return self.checkpoint_config.eval_output_shape * self.voxel_size
 
     @property
-    def context_size(self) -> Coordinate:
-        return self.checkpoint_config.context * self.voxel_size
+    def context_size(self) -> Coordinate | tuple[Coordinate, Coordinate]:
+        context = self.checkpoint_config.context
+        if isinstance(context, Coordinate):
+            return self.checkpoint_config.context * self.voxel_size
+        elif isinstance(context[0], Coordinate) and isinstance(context[1], Coordinate):
+            return (
+                Coordinate(context[0]) * self.voxel_size,
+                Coordinate(context[1]) * self.voxel_size,
+            )
+        else:
+            raise NotImplementedError(
+                f"Unsupported context {context} type: {type(context)}. Expected Coordinate or tuple of Coordinates."
+            )
 
     @property
     def task_name(self) -> str:
@@ -203,7 +215,7 @@ class Predict(BlockwiseTask):
         for output_key, out_data in zip(output_keys, self.out_data):
             if out_data is not None:
                 pipeline += ArrayWrite(
-                    output_key, out_data.array("a"), self.checkpoint.to_uint8
+                    output_key, Dataset.array(out_data, "a"), self.checkpoint.to_uint8
                 )
 
         print("Starting prediction...")
