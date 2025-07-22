@@ -67,11 +67,7 @@ class Model(StrictBaseModel, ABC):
             )
 
         if self.context_override is not None:
-            return (
-                Coordinate(self.context_override)
-                if isinstance(self.context_override, PydanticCoordinate)
-                else self.context_override
-            )
+            return self.context_override
         else:
             return expected_context // 2
 
