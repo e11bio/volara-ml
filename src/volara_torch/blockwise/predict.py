@@ -85,7 +85,7 @@ class Predict(BlockwiseTask):
     def write_roi(self) -> Roi:
         in_data_roi = self.in_data.array("r").roi
         if self.roi is not None:
-            return in_data_roi.intersect(Roi(self.roi[0], self.roi[1]))
+            return in_data_roi.intersect(self.roi)
         else:
             return in_data_roi
 
