@@ -58,7 +58,7 @@ class Model(StrictBaseModel, ABC):
         with this model.
         """
         expected_context = self.min_input_shape - self.min_output_shape
-        if self.context_override is None:
+        if self.context_override is not None:
             assert (
                 self.context_override[0] + self.context_override[1]
             ) == expected_context, (
