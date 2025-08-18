@@ -44,14 +44,32 @@ class Model(StrictBaseModel, ABC):
     The range of the output data. This is used to convert between `np.uint8` and
     `np.float32` data types for efficient reading/writing of model outputs.
     """
+    context_override: tuple[PydanticCoordinate, PydanticCoordinate] | None = None
+    """
+    An optional override for asymetrical context sizes. This lets you define
+    a specific lower and upper context size for the model which must equal
+    the expected context size of input_shape - output_shape
+    """
 
     @property
-    def context(self) -> Coordinate:
+    def context(self) -> Coordinate | tuple[Coordinate, Coordinate]:
         """
         The context required to make tile artifact free predictions
         with this model.
         """
-        return (self.eval_input_shape - self.eval_output_shape) // 2
+        expected_context = self.min_input_shape - self.min_output_shape
+        if self.context_override is not None:
+            assert (
+                self.context_override[0] + self.context_override[1]
+            ) == expected_context, (
+                f"Expected context override {self.context_override} to sum to {expected_context}, "
+                f"but got {self.context_override[0] + self.context_override[1]}"
+            )
+
+        if self.context_override is not None:
+            return self.context_override
+        else:
+            return expected_context // 2
 
     @abstractmethod
     def model(self) -> torch.nn.Module:
