@@ -120,7 +120,7 @@ class Predict(BlockwiseTask):
     def drop_artifacts(self):
         for out_data in self.out_data:
             if out_data is not None:
-                rmtree(out_data.store)
+                out_data.drop()
 
     def init(self):
         self.init_out_array()
