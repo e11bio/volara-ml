@@ -74,7 +74,6 @@ class Predict(BlockwiseTask):
 
     fit: Literal["overhang"] = "overhang"
     read_write_conflict: Literal[False] = False
-    context_override: tuple[PydanticCoordinate, PydanticCoordinate] | None = None
     _out_array_dtype: np.dtype = np.dtype(np.uint8)
 
     @property
