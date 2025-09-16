@@ -1,11 +1,11 @@
 [project]
 name = "volara-torch"
-version = "1.0.0"
+version = "1.0.1"
 description = "Plugin for Volara including everything pytorch related. This includes the `Predict` task and the `models` module."
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "volara>=1.0",
+    "volara>=1.0.2",
     "torch>=2.4",
     "daisy>=1.2.2",
     "gunpowder>=1.4.0",
