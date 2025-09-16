@@ -1,6 +1,5 @@
 import logging
 from contextlib import contextmanager
-from shutil import rmtree
 from typing import Annotated, Callable, Literal
 
 import daisy
@@ -101,7 +100,7 @@ class Predict(BlockwiseTask):
     def context_size(self) -> Coordinate | tuple[Coordinate, Coordinate]:
         context = self.checkpoint_config.context
         if isinstance(context, Coordinate):
-            return self.checkpoint_config.context * self.voxel_size
+            return context * self.voxel_size
         elif isinstance(context[0], Coordinate) and isinstance(context[1], Coordinate):
             return (context[0] * self.voxel_size, context[1] * self.voxel_size)
         else:
