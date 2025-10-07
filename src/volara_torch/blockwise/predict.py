@@ -42,10 +42,10 @@ class ArraySource(BatchProvider):
 
 
 class ArrayWrite(gp.BatchFilter):
-    def __init__(self, key: ArrayKey, array: Array, to_uint8: Callable):
+    def __init__(self, key: ArrayKey, array: Array, to_out_dtype: Callable):
         self.key = key
         self.array = array
-        self.to_uint8 = to_uint8
+        self.to_out_dtype = to_out_dtype
 
     def setup(self):
         self.updates(self.key, self.spec[self.key].copy())
@@ -53,7 +53,7 @@ class ArrayWrite(gp.BatchFilter):
     def process(self, batch, request):
         write_roi = request[self.key].roi.intersect(self.array.roi)
         data = batch[self.key].crop(write_roi).data
-        self.array[write_roi] = self.to_uint8(data)
+        self.array[write_roi] = self.to_out_dtype(data)
 
 
 OutDataType = Annotated[
@@ -73,7 +73,7 @@ class Predict(BlockwiseTask):
 
     fit: Literal["overhang"] = "overhang"
     read_write_conflict: Literal[False] = False
-    _out_array_dtype: np.dtype = np.dtype(np.uint8)
+    out_array_dtype: np.dtype = np.dtype(np.uint8)
 
     @property
     def checkpoint_config(self) -> Model:
@@ -145,7 +145,7 @@ class Predict(BlockwiseTask):
                     units=units,
                     axis_names=[f"{out_data.name}^"] + axis_names,
                     types=[out_data.name] + types,
-                    dtype=self._out_array_dtype,
+                    dtype=self.out_array_dtype,
                 )
 
     def select_device(self, client):
@@ -209,7 +209,7 @@ class Predict(BlockwiseTask):
         for output_key, out_data in zip(output_keys, self.out_data):
             if out_data is not None:
                 pipeline += ArrayWrite(
-                    output_key, Dataset.array(out_data, "a"), self.checkpoint.to_uint8
+                    output_key, Dataset.array(out_data, "a"), self.checkpoint.to_out_dtype
                 )
 
         print("Starting prediction...")
