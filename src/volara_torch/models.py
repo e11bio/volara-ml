@@ -50,6 +50,7 @@ class Model(StrictBaseModel, ABC):
     a specific lower and upper context size for the model which must equal
     the expected context size of input_shape - output_shape
     """
+    out_dtype: np.dtype = np.dtype(np.uint8)
 
     @property
     def context(self) -> Coordinate | tuple[Coordinate, Coordinate]:
@@ -107,17 +108,23 @@ class Model(StrictBaseModel, ABC):
         """
         pass
 
-    def to_uint8(self, out_data: np.ndarray) -> np.ndarray:
+    def to_out_dtype(self, out_data: np.ndarray) -> np.ndarray:
         """
         A function defining the conversion function to go from model
         outputs to `np.uint8` for writing to zarr.
         """
+        try:
+            a_info = np.iinfo(self.out_dtype)
+            a_min, a_max = a_info.min, a_info.max
+        except ValueError:
+            a_info = np.finfo(self.out_dtype)
+            a_min, a_max = a_info.min, a_info.max
         return np.clip(
             ((out_data - self.out_range[0]) / (self.out_range[1] - self.out_range[0]))
-            * 255,
-            0,
-            255,
-        ).astype(np.uint8)
+            * a_max,
+            a_min=a_min,
+            a_max=a_max,
+        ).astype(self.out_dtype)
 
     def from_uint8(self, data: np.ndarray) -> np.ndarray:
         """
