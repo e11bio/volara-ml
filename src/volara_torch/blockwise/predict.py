@@ -1,20 +1,19 @@
 import logging
 from contextlib import contextmanager
-from typing import Annotated, Callable, Literal
+from typing import Annotated, Any, Callable, Literal
 
 import daisy
 import gunpowder as gp
 import numpy as np
-import torch
 from funlib.geometry import Coordinate, Roi
 from funlib.persistence import Array
 from gunpowder import ArrayKey, Batch, BatchProvider
+from gunpowder.nodes.generic_predict import GenericPredict
 from pydantic import Field
 from volara.blockwise import BlockwiseTask
 from volara.datasets import LSD, Affs, Dataset, Raw
-from volara.utils import PydanticCoordinate
 
-from ..models import Model, TorchModel
+from ..models import JaxModel, Model, TorchModel
 
 logger = logging.getLogger(__file__)
 
@@ -56,6 +55,37 @@ class ArrayWrite(gp.BatchFilter):
         self.array[write_roi] = self.to_out_dtype(data)
 
 
+class CallablePredict(GenericPredict):
+    """A framework-agnostic predict node that wraps a Model's predict_fn."""
+
+    def __init__(
+        self,
+        model_config: Model,
+        input_key: ArrayKey,
+        output_keys: dict[int, ArrayKey],
+        device: Any,
+        spawn_subprocess: bool = False,
+    ):
+        self.model_config = model_config
+        self.device = device
+        self._predict_fn: Callable[[np.ndarray], list[np.ndarray]] | None = None
+        inputs = {0: input_key}
+        super().__init__(inputs, output_keys, spawn_subprocess=spawn_subprocess)
+
+    def start(self):
+        self._predict_fn = self.model_config.predict_fn(self.device)
+
+    def predict(self, batch, request):
+        assert self._predict_fn is not None
+        input_data = batch[self.inputs[0]].data
+        outputs = self._predict_fn(input_data)
+        for idx, key in self.outputs.items():
+            if key in request:
+                spec = self.spec[key].copy()
+                spec.roi = request[key].roi
+                batch.arrays[key] = gp.Array(outputs[idx], spec)
+
+
 OutDataType = Annotated[
     Raw | Affs | LSD,
     Field(discriminator="dataset_type"),
@@ -65,7 +95,7 @@ OutDataType = Annotated[
 class Predict(BlockwiseTask):
     task_type: Literal["predict"] = "predict"
     checkpoint: Annotated[
-        TorchModel,
+        TorchModel | JaxModel,
         Field(discriminator="model_type"),
     ]
     in_data: Raw
@@ -148,21 +178,13 @@ class Predict(BlockwiseTask):
                     dtype=self.out_array_dtype,
                 )
 
-    def select_device(self, client):
-        num_gpus = torch.cuda.device_count()
-        if num_gpus == 0:
-            return "cpu"
-        else:
-            device_id = client.worker_id % num_gpus
-            return f"cuda:{device_id}"
-
     @contextmanager
     def process_block_func(self):
         try:
             client = daisy.Client()
-            device = self.select_device(client)
+            device = self.checkpoint.select_device(client.worker_id)
         except KeyError:
-            device = "cuda"
+            device = self.checkpoint.select_device(0)
 
         logging.info(f"using device {device}")
 
@@ -170,9 +192,6 @@ class Predict(BlockwiseTask):
         output_keys = [
             gp.ArrayKey(f"OUTPUT_KEY_{i}") for i in range(len(self.out_data))
         ]
-
-        model = self.checkpoint.model()
-        model.eval()
 
         in_array = self.in_data.array("r")
 
@@ -185,10 +204,10 @@ class Predict(BlockwiseTask):
         if in_array.channel_dims < 1:
             pipeline += gp.Stack(1)
 
-        pipeline += gp.torch.Predict(
-            model=model,
-            inputs={0: input_key},
-            outputs={
+        pipeline += CallablePredict(
+            model_config=self.checkpoint,
+            input_key=input_key,
+            output_keys={
                 i: output_key
                 for i, output_key in enumerate(output_keys)
                 if self.out_data[i] is not None

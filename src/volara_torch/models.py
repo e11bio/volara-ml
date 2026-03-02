@@ -1,11 +1,15 @@
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Any, Callable, Literal
 
 import numpy as np
-import torch
 from funlib.geometry import Coordinate
 from volara.utils import PydanticCoordinate, StrictBaseModel
+
+if TYPE_CHECKING:
+    import torch
 
 
 class Model(StrictBaseModel, ABC):
@@ -73,12 +77,14 @@ class Model(StrictBaseModel, ABC):
             return expected_context // 2
 
     @abstractmethod
-    def model(self) -> torch.nn.Module:
-        """
-        A getter for a plain `torch.nn.Module` that can be called to
-        generate the desired predictions. This should load the appropriate
-        model weights.
-        """
+    def predict_fn(self, device: Any) -> Callable[[np.ndarray], list[np.ndarray]]:
+        """Return a callable: numpy input -> list of numpy outputs.
+        Handles model loading, device placement, eval mode, etc."""
+        pass
+
+    @abstractmethod
+    def select_device(self, worker_id: int) -> Any:
+        """Select a compute device for the given worker."""
         pass
 
     @property
@@ -151,7 +157,7 @@ class TorchModel(Model):
     model.state_dict() dictionary."""
     pred_size_growth: PydanticCoordinate | None = None
 
-    def model(self) -> torch.nn.Module:
+    def model(self) -> "torch.nn.Module":
         import torch
 
         model = torch.load(self.save_path, map_location="cpu", weights_only=False)
@@ -170,6 +176,29 @@ class TorchModel(Model):
             model.load_state_dict(weights)
 
         return model
+
+    def predict_fn(self, device: Any) -> Callable[[np.ndarray], list[np.ndarray]]:
+        import torch
+
+        model = self.model()
+        model.eval()
+        model.to(device)
+
+        def predict(input_data: np.ndarray) -> list[np.ndarray]:
+            with torch.no_grad():
+                tensor = torch.as_tensor(input_data, device=device)
+                out = model(tensor)
+                if isinstance(out, tuple):
+                    return [o.cpu().numpy() for o in out]
+                return [out.cpu().numpy()]
+
+        return predict
+
+    def select_device(self, worker_id: int) -> Any:
+        import torch
+
+        n = torch.cuda.device_count()
+        return "cpu" if n == 0 else f"cuda:{worker_id % n}"
 
     @property
     def eval_input_shape(self) -> Coordinate:
@@ -192,6 +221,94 @@ class TorchModel(Model):
     def num_out_channels(self) -> list[int | None]:
         num_channels = self.out_channels
 
+        if isinstance(num_channels, int) or num_channels is None:
+            return [num_channels]
+        elif isinstance(num_channels, list):
+            return num_channels
+
+
+class JaxModel(Model):
+    """A JAX/Flax model configuration.
+
+    The model is loaded from a pickled Flax module (or apply function) and
+    parameters are loaded from an orbax checkpoint directory or .msgpack file.
+    All JAX imports are lazy so the module loads without JAX installed.
+    """
+
+    model_type: Literal["jax"] = "jax"
+    model_path: Path
+    """Path to a pickled Flax module (or apply function)."""
+    params_path: Path | None = None
+    """Path to an orbax checkpoint directory or .msgpack file with model parameters."""
+    pred_size_growth: PydanticCoordinate | None = None
+
+    def _load_model(self) -> Any:
+        import pickle
+
+        with open(self.model_path, "rb") as f:
+            return pickle.load(f)
+
+    def _load_params(self) -> Any:
+        if self.params_path is None:
+            return {}
+
+        path = self.params_path
+        if path.suffix == ".msgpack":
+            from flax.serialization import from_bytes
+
+            with open(path, "rb") as f:
+                return from_bytes(None, f.read())
+        else:
+            import orbax.checkpoint as ocp
+
+            checkpointer = ocp.StandardCheckpointer()
+            return checkpointer.restore(path)
+
+    def predict_fn(self, device: Any) -> Callable[[np.ndarray], list[np.ndarray]]:
+        import jax
+
+        model = self._load_model()
+        params = self._load_params()
+        params = jax.device_put(params, device)
+
+        @jax.jit
+        def _apply(x: Any) -> Any:
+            return model.apply(params, x)
+
+        def predict(input_data: np.ndarray) -> list[np.ndarray]:
+            out = _apply(jax.numpy.asarray(input_data))
+            if isinstance(out, tuple):
+                return [np.asarray(o) for o in out]
+            return [np.asarray(out)]
+
+        return predict
+
+    def select_device(self, worker_id: int) -> Any:
+        import jax
+
+        gpus = jax.devices("gpu")
+        if len(gpus) == 0:
+            return jax.devices("cpu")[0]
+        return gpus[worker_id % len(gpus)]
+
+    @property
+    def eval_input_shape(self) -> Coordinate:
+        input_shape = Coordinate(self.min_input_shape)
+        if self.pred_size_growth is not None:
+            assert np.sum(self.pred_size_growth % Coordinate(self.min_step_shape)) == 0
+            input_shape = input_shape + self.pred_size_growth
+        return input_shape
+
+    @property
+    def eval_output_shape(self) -> Coordinate:
+        output_shape = Coordinate(self.min_output_shape)
+        if self.pred_size_growth is not None:
+            output_shape = output_shape + self.pred_size_growth
+        return output_shape
+
+    @property
+    def num_out_channels(self) -> list[int | None]:
+        num_channels = self.out_channels
         if isinstance(num_channels, int) or num_channels is None:
             return [num_channels]
         elif isinstance(num_channels, list):
