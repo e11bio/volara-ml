@@ -5,7 +5,6 @@ from typing import Annotated, Callable, Literal
 import daisy
 import gunpowder as gp
 import numpy as np
-import torch
 from funlib.geometry import Coordinate, Roi
 from funlib.persistence import Array
 from gunpowder import ArrayKey, Batch, BatchProvider
@@ -149,6 +148,8 @@ class Predict(BlockwiseTask):
                 )
 
     def select_device(self, client):
+        import torch
+
         num_gpus = torch.cuda.device_count()
         if num_gpus == 0:
             return "cpu"

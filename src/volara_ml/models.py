@@ -1,11 +1,23 @@
 from abc import ABC, abstractmethod
 from pathlib import Path
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 
 import numpy as np
-import torch
 from funlib.geometry import Coordinate
 from volara.utils import PydanticCoordinate, StrictBaseModel
+
+if TYPE_CHECKING:
+    import torch
+
+
+def _require_torch() -> None:
+    try:
+        import torch as _  # noqa: F811, F401
+    except ImportError:
+        raise ImportError(
+            "PyTorch is required for this feature. "
+            "Install it with: pip install volara-ml[torch]"
+        ) from None
 
 
 class Model(StrictBaseModel, ABC):
@@ -73,7 +85,7 @@ class Model(StrictBaseModel, ABC):
             return expected_context // 2
 
     @abstractmethod
-    def model(self) -> torch.nn.Module:
+    def model(self) -> "torch.nn.Module":
         """
         A getter for a plain `torch.nn.Module` that can be called to
         generate the desired predictions. This should load the appropriate
@@ -139,6 +151,10 @@ class Model(StrictBaseModel, ABC):
 
 class TorchModel(Model):
     model_type: Literal["torch"] = "torch"
+
+    def model_post_init(self, __context: object) -> None:
+        _require_torch()
+
     save_path: Path
     """
     The path to a model saved using `torch.jit.save` or `torch.save`.
@@ -151,7 +167,7 @@ class TorchModel(Model):
     model.state_dict() dictionary."""
     pred_size_growth: PydanticCoordinate | None = None
 
-    def model(self) -> torch.nn.Module:
+    def model(self) -> "torch.nn.Module":
         import torch
 
         model = torch.load(self.save_path, map_location="cpu", weights_only=False)
