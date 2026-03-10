@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import torch
 
-from volara_torch.models import TorchModel
+from volara_ml.models import TorchModel
 
 
 @pytest.mark.parametrize("save_type", ["jit", "pickle"])
@@ -51,7 +51,7 @@ def test_torch_models(save_type, out_range, checkpoint, tmp_path):
     # model data conversions
     uint8_data = np.arange(0, 256, dtype=np.uint8).reshape(16, 16)
     float_data = model_config.from_uint8(uint8_data)
-    uint8_data_back = model_config.to_uint8(float_data)
+    uint8_data_back = model_config.to_out_dtype(float_data)
     assert np.isclose(float_data.max(), model_config.out_range[1])
     assert np.isclose(float_data.min(), model_config.out_range[0])
     assert uint8_data_back.max() == 255, (

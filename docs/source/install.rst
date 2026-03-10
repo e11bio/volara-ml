@@ -7,4 +7,5 @@ For the latest version:
 
 .. code-block:: bash
 
-   pip install volara-torch
+   pip install volara-ml          # base package
+   pip install volara-ml[torch]   # with PyTorch support
