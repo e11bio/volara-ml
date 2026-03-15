@@ -178,6 +178,16 @@ class Predict(BlockwiseTask):
                     dtype=self.out_array_dtype,
                 )
 
+    def select_device(self, client):
+        import torch
+
+        num_gpus = torch.cuda.device_count()
+        if num_gpus == 0:
+            return "cpu"
+        else:
+            device_id = client.worker_id % num_gpus
+            return f"cuda:{device_id}"
+
     @contextmanager
     def process_block_func(self):
         try:

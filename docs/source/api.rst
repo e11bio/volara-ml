@@ -3,20 +3,20 @@
 API Reference
 =============
 
-.. automodule:: volara-torch
+.. automodule:: volara-ml
     :no-index:
 
 Models
 ------
 
-.. automodule:: volara-torch.models
+.. automodule:: volara-ml.models
     :members:
 
 
 Blockwise Tasks
 ---------------
 
-.. currentmodule:: volara-torch.blockwise
+.. currentmodule:: volara-ml.blockwise
 
 .. autopydantic_model:: Predict
     :members:
