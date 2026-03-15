@@ -331,7 +331,10 @@ class JaxModel(Model):
     def select_device(self, worker_id: int) -> Any:
         import jax
 
-        gpus = jax.devices("gpu")
+        try:
+            gpus = jax.devices("gpu")
+        except RuntimeError:
+            gpus = []
         if len(gpus) == 0:
             return jax.devices("cpu")[0]
         return gpus[worker_id % len(gpus)]
