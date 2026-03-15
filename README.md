@@ -14,5 +14,5 @@ pip install volara-ml[torch]  # with PyTorch support
 pip install volara-ml[jax]    # with Jax support
 ```
 
-<!-- # Available blockwise operations:
-- `Predict`: Model Prediction (requires `torch` extra) -->
+# Available blockwise operations:
+- `Predict`: Model Prediction (requires `torch` or `jax` extra)
