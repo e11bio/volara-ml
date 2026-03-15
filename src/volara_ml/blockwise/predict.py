@@ -8,12 +8,12 @@ import numpy as np
 from funlib.geometry import Coordinate, Roi
 from funlib.persistence import Array
 from gunpowder import ArrayKey, Batch, BatchProvider
+from gunpowder.nodes.generic_predict import GenericPredict
 from pydantic import Field
 from volara.blockwise import BlockwiseTask
 from volara.datasets import LSD, Affs, Dataset, Raw
-from volara.utils import PydanticCoordinate
 
-from ..models import Model, TorchModel
+from ..models import JaxModel, Model, TorchModel
 
 logger = logging.getLogger(__file__)
 
@@ -55,6 +55,30 @@ class ArrayWrite(gp.BatchFilter):
         self.array[write_roi] = self.to_out_dtype(data)
 
 
+class CallablePredict(GenericPredict):
+    """A framework-agnostic predict node that wraps a predict callable."""
+
+    def __init__(
+        self,
+        predict_fn: Callable[[np.ndarray], list[np.ndarray]],
+        input_key: ArrayKey,
+        output_keys: dict[int, ArrayKey],
+        spawn_subprocess: bool = False,
+    ):
+        self._predict_fn = predict_fn
+        inputs = {0: input_key}
+        super().__init__(inputs, output_keys, spawn_subprocess=spawn_subprocess)
+
+    def predict(self, batch, request):
+        input_data = batch[self.inputs[0]].data
+        outputs = self._predict_fn(input_data)
+        for idx, key in self.outputs.items():
+            if key in request:
+                spec = self.spec[key].copy()
+                spec.roi = request[key].roi
+                batch.arrays[key] = gp.Array(outputs[idx], spec)
+
+
 OutDataType = Annotated[
     Raw | Affs | LSD,
     Field(discriminator="dataset_type"),
@@ -64,7 +88,7 @@ OutDataType = Annotated[
 class Predict(BlockwiseTask):
     task_type: Literal["predict"] = "predict"
     checkpoint: Annotated[
-        TorchModel,
+        TorchModel | JaxModel,
         Field(discriminator="model_type"),
     ]
     in_data: Raw
@@ -147,23 +171,13 @@ class Predict(BlockwiseTask):
                     dtype=self.out_array_dtype,
                 )
 
-    def select_device(self, client):
-        import torch
-
-        num_gpus = torch.cuda.device_count()
-        if num_gpus == 0:
-            return "cpu"
-        else:
-            device_id = client.worker_id % num_gpus
-            return f"cuda:{device_id}"
-
     @contextmanager
     def process_block_func(self):
         try:
             client = daisy.Client()
-            device = self.select_device(client)
+            device = self.checkpoint.select_device(client.worker_id)
         except KeyError:
-            device = "cuda"
+            device = self.checkpoint.select_device(0)
 
         logging.info(f"using device {device}")
 
@@ -172,57 +186,54 @@ class Predict(BlockwiseTask):
             gp.ArrayKey(f"OUTPUT_KEY_{i}") for i in range(len(self.out_data))
         ]
 
-        model = self.checkpoint.model()
-        model.eval()
-
         in_array = self.in_data.array("r")
 
-        pipeline = ArraySource(input_key, in_array)
+        with self.checkpoint.predict(device) as predict_fn:
+            pipeline = ArraySource(input_key, in_array)
 
-        pipeline += gp.Pad(input_key, size=None)
+            pipeline += gp.Pad(input_key, size=None)
 
-        if in_array.channel_dims < 2:
-            pipeline += gp.Stack(1)
-        if in_array.channel_dims < 1:
-            pipeline += gp.Stack(1)
+            if in_array.channel_dims < 2:
+                pipeline += gp.Stack(1)
+            if in_array.channel_dims < 1:
+                pipeline += gp.Stack(1)
 
-        pipeline += gp.torch.Predict(
-            model=model,
-            inputs={0: input_key},
-            outputs={
-                i: output_key
-                for i, output_key in enumerate(output_keys)
-                if self.out_data[i] is not None
-            },
-            device=device,
-            spawn_subprocess=self.num_cache_workers is not None
-            and self.num_cache_workers > 1,
-        )
+            pipeline += CallablePredict(
+                predict_fn=predict_fn,
+                input_key=input_key,
+                output_keys={
+                    i: output_key
+                    for i, output_key in enumerate(output_keys)
+                    if self.out_data[i] is not None
+                },
+                spawn_subprocess=self.num_cache_workers is not None
+                and self.num_cache_workers > 1,
+            )
 
-        pipeline += gp.Squeeze(
-            [
-                output_key
-                for i, output_key in enumerate(output_keys)
-                if self.out_data[i] is not None
-            ]
-        )
+            pipeline += gp.Squeeze(
+                [
+                    output_key
+                    for i, output_key in enumerate(output_keys)
+                    if self.out_data[i] is not None
+                ]
+            )
 
-        for output_key, out_data in zip(output_keys, self.out_data):
-            if out_data is not None:
-                pipeline += ArrayWrite(
-                    output_key, Dataset.array(out_data, "a"), self.checkpoint.to_out_dtype
-                )
+            for output_key, out_data in zip(output_keys, self.out_data):
+                if out_data is not None:
+                    pipeline += ArrayWrite(
+                        output_key, Dataset.array(out_data, "a"), self.checkpoint.to_out_dtype
+                    )
 
-        print("Starting prediction...")
+            print("Starting prediction...")
 
-        with gp.build(pipeline):
+            with gp.build(pipeline):
 
-            def process_block(block):
-                request = gp.BatchRequest()
-                request[input_key] = gp.ArraySpec(roi=block.read_roi)
-                for i, output_key in enumerate(output_keys):
-                    if self.out_data[i] is not None:
-                        request[output_key] = gp.ArraySpec(roi=block.write_roi)
-                pipeline.request_batch(request)
+                def process_block(block):
+                    request = gp.BatchRequest()
+                    request[input_key] = gp.ArraySpec(roi=block.read_roi)
+                    for i, output_key in enumerate(output_keys):
+                        if self.out_data[i] is not None:
+                            request[output_key] = gp.ArraySpec(roi=block.write_roi)
+                    pipeline.request_batch(request)
 
-            yield process_block
+                yield process_block

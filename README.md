@@ -11,7 +11,8 @@ A plugin for volara that includes ML models and a `Predict` task
 ```bash
 pip install volara-ml         # base package
 pip install volara-ml[torch]  # with PyTorch support
+pip install volara-ml[jax]    # with Jax support
 ```
 
 # Available blockwise operations:
-- `Predict`: Model Prediction (requires `torch` extra)
+- `Predict`: Model Prediction (requires `torch` or `jax` extra)
