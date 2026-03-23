@@ -37,7 +37,7 @@ jobs:
 
     - name: Test with pytest
       run: |
-        uv sync --extra dev --resolution ${{ matrix.resolution }} --python ${{ matrix.python-version}}
+        uv sync --extra dev --extra torch --extra jax --resolution ${{ matrix.resolution }} --python ${{ matrix.python-version}}
         uv run pytest --cov=src tests
 
     - name: Upload coverage to Codecov

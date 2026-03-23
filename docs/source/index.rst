@@ -5,6 +5,7 @@
    overview
    install
    examples/cremi/cremi
+   examples/jax/identity
    api
 
 .. include:: ../../README.md

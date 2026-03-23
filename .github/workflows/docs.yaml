@@ -31,10 +31,11 @@ jobs:
 
       - name: Turn script into notebook
         run: |
-          uv sync --extra docs
+          uv sync --extra docs --extra torch --extra jax
           uv pip install .
           uv run python -m ipykernel install --name volara_env --user
           uv run jupytext --to notebook ./examples/cremi/cremi.py
+          uv run jupytext --to notebook ./examples/jax/identity.py
           cp -r examples docs/source
 
       - name: Build documentation
