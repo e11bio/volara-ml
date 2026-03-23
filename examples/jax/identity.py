@@ -69,6 +69,7 @@ params = model.init(rng, dummy)
 ckpt_path = work_dir / "ckpt"
 checkpointer = ocp.StandardCheckpointer()
 checkpointer.save(str(ckpt_path.resolve()), params)
+checkpointer.wait_until_finished()
 
 # %% [markdown]
 # ## 3. Configure JaxModel and Predict
