@@ -8,6 +8,8 @@ import jax.numpy as jnp
 import orbax.checkpoint as ocp
 from flax import linen as nn
 
+from funlib.geometry import Coordinate
+
 from volara_ml.models import JaxModel, TorchModel
 
 
@@ -38,14 +40,14 @@ def test_torch_models(save_type, out_range, checkpoint, tmp_path):
 
     model_config = TorchModel(
         in_channels=1,
-        min_input_shape=(1, 1),
-        min_output_shape=(1, 1),
-        min_step_shape=(1, 1),
+        min_input_shape=Coordinate(1, 1),
+        min_output_shape=Coordinate(1, 1),
+        min_step_shape=Coordinate(1, 1),
         out_channels=1,
         out_range=out_range,
         save_path=save_path,
         checkpoint_file=checkpoint_file if checkpoint else None,
-        pred_size_growth=(99, 99),
+        pred_size_growth=Coordinate(99, 99),
     )
 
     # basic model interface values
@@ -120,14 +122,14 @@ def test_jax_models(save_type, out_range, tmp_path):
 
     model_config = JaxModel(
         in_channels=1,
-        min_input_shape=(1, 1),
-        min_output_shape=(1, 1),
-        min_step_shape=(1, 1),
+        min_input_shape=Coordinate(1, 1),
+        min_output_shape=Coordinate(1, 1),
+        min_step_shape=Coordinate(1, 1),
         out_channels=1,
         out_range=out_range,
         model_path=model_path,
         params_path=params_path,
-        pred_size_growth=(99, 99),
+        pred_size_growth=Coordinate(99, 99),
     )
 
     # basic model interface values
