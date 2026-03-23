@@ -1,13 +1,11 @@
 import cloudpickle
-import numpy as np
-import pytest
-import torch
-
 import jax
 import jax.numpy as jnp
+import numpy as np
 import orbax.checkpoint as ocp
+import pytest
+import torch
 from flax import linen as nn
-
 from funlib.geometry import Coordinate
 
 from volara_ml.models import JaxModel, TorchModel
