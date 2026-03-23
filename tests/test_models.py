@@ -110,7 +110,7 @@ def test_jax_models(save_type, out_range, tmp_path):
         params_path = tmp_path / "ckpt"
         checkpointer = ocp.StandardCheckpointer()
         checkpointer.save(str(params_path), params)
-        checkpointer.wait_until_finished()
+        checkpointer.close()
     elif save_type == "msgpack":
         from flax.serialization import to_bytes
 
