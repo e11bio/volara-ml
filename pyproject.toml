@@ -5,13 +5,16 @@ description = "Plugin for Volara including ML-related tasks. This includes the `
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "volara>=1.0.2",
+    "volara>=1.0.4",
     "daisy>=1.2.2",
-    "gunpowder>=1.4.0",
+    "gunpowder",
     "funlib.geometry>=0.3",
-    "funlib.persistence>=0.6",
+    "funlib.persistence>=0.7",
     "pydantic>=2.6.3",
 ]
+
+[tool.uv.sources]
+gunpowder = { git = "https://github.com/funkelab/gunpowder", branch = "zarr3" }
 
 [project.optional-dependencies]
 torch = ["torch>=2.4"]
