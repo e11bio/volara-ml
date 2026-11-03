@@ -1,6 +1,5 @@
 [![tests](https://github.com/e11bio/volara-ml/actions/workflows/tests.yaml/badge.svg)](https://github.com/e11bio/volara-ml/actions/workflows/tests.yaml)
-[![ruff](https://github.com/e11bio/volara-ml/actions/workflows/ruff.yaml/badge.svg)](https://github.com/e11bio/volara-ml/actions/workflows/ruff.yaml)
-[![ty](https://github.com/e11bio/volara-ml/actions/workflows/ty.yaml/badge.svg)](https://github.com/e11bio/volara-ml/actions/workflows/ty.yaml)
+[![lint](https://github.com/e11bio/volara-ml/actions/workflows/lint.yaml/badge.svg)](https://github.com/e11bio/volara-ml/actions/workflows/lint.yaml)
 <!-- [![codecov](https://codecov.io/gh/e11bio/volara-ml/branch/main/graph/badge.svg?token=YOUR_TOKEN)](https://codecov.io/gh/e11bio/volara-ml) -->
 
 # volara-ml
