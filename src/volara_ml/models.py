@@ -103,7 +103,9 @@ class Model(StrictBaseModel, ABC):
             return expected_context // 2
 
     @abstractmethod
-    def predict(self, device: Any) -> Generator[Callable[[np.ndarray], list[np.ndarray]], None, None]:
+    def predict(
+        self, device: Any
+    ) -> Generator[Callable[[np.ndarray], list[np.ndarray]], None, None]:
         """Context manager that yields a predict callable.
 
         Loads the model onto the given device on entry and frees GPU memory
@@ -211,7 +213,9 @@ class TorchModel(Model):
         return model
 
     @contextmanager
-    def predict(self, device: Any) -> Generator[Callable[[np.ndarray], list[np.ndarray]], None, None]:
+    def predict(
+        self, device: Any
+    ) -> Generator[Callable[[np.ndarray], list[np.ndarray]], None, None]:
         import torch
 
         model = self.model()
@@ -307,7 +311,9 @@ class JaxModel(Model):
             return checkpointer.restore(path)
 
     @contextmanager
-    def predict(self, device: Any) -> Generator[Callable[[np.ndarray], list[np.ndarray]], None, None]:
+    def predict(
+        self, device: Any
+    ) -> Generator[Callable[[np.ndarray], list[np.ndarray]], None, None]:
         import jax
 
         model = self._load_model()

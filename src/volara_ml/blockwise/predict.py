@@ -224,7 +224,9 @@ class Predict(BlockwiseTask):
             for output_key, out_data in zip(output_keys, self.out_data):
                 if out_data is not None:
                     pipeline += ArrayWrite(
-                        output_key, Dataset.array(out_data, "a"), self.checkpoint.to_out_dtype
+                        output_key,
+                        Dataset.array(out_data, "a"),
+                        self.checkpoint.to_out_dtype,
                     )
 
             print("Starting prediction...")

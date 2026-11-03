@@ -5,10 +5,10 @@
 # and verify the output matches the input.
 
 # %%
-import cloudpickle
 import shutil
 from pathlib import Path
 
+import cloudpickle
 import jax
 import jax.numpy as jnp
 import numpy as np
@@ -16,8 +16,8 @@ import orbax.checkpoint as ocp
 import zarr
 from flax import linen as nn
 from funlib.geometry import Coordinate
-
 from volara.datasets import Raw
+
 from volara_ml.blockwise import Predict
 from volara_ml.models import JaxModel
 
@@ -40,6 +40,7 @@ raw_ds.attrs["unit"] = ["px", "px"]
 
 # %% [markdown]
 # ## 2. Define and save a trivial Flax identity model
+
 
 # %%
 class Identity(nn.Module):
