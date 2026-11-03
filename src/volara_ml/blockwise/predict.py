@@ -1,6 +1,7 @@
 import logging
+from collections.abc import Callable
 from contextlib import contextmanager
-from typing import Annotated, Callable, Literal
+from typing import Annotated, Literal
 
 import daisy
 import gunpowder as gp
@@ -156,7 +157,7 @@ class Predict(BlockwiseTask):
         axis_names = in_data.axis_names[-in_data.voxel_size.dims :]
         types = in_data.types[-in_data.voxel_size.dims :]
         for out_data, num_channels in zip(
-            self.out_data, self.checkpoint_config.num_out_channels
+            self.out_data, self.checkpoint_config.num_out_channels, strict=False
         ):
             if num_channels is None:
                 num_channels = self.in_data.array("r").shape[0]
@@ -221,7 +222,7 @@ class Predict(BlockwiseTask):
                 ]
             )
 
-            for output_key, out_data in zip(output_keys, self.out_data):
+            for output_key, out_data in zip(output_keys, self.out_data, strict=False):
                 if out_data is not None:
                     pipeline += ArrayWrite(
                         output_key,

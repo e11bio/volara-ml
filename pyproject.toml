@@ -47,9 +47,6 @@ docs = [
 [project.entry-points."volara.blockwise_tasks"]
 predict = "volara_ml.blockwise.predict:Predict"
 
-[tool.ruff]
-lint.select = ["F", "W", "I001"]
-
 [[tool.mypy.overrides]]
 module = [
     "daisy.*",
@@ -61,3 +58,16 @@ ignore_missing_imports = true
 pythonpath = [
   "src"
 ]
+
+[tool.ruff]
+line-length = 88
+extend-exclude = ["docs/build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]  # the formatter owns line length
+
+[tool.ruff.lint.per-file-ignores]
+"tutorials/**/*.py" = ["E402"]  # jupytext cells import mid-file
+"examples/**/*.py" = ["E402"]
+"__init__.py" = ["F401"]  # re-exports
