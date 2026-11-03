@@ -13,11 +13,10 @@ import numpy as np
 import torch
 from funlib.geometry import Coordinate
 from funlib.persistence import prepare_ds
-
 from volara.datasets import Raw
+
 from volara_ml.blockwise import Predict
 from volara_ml.models import TorchModel
-
 
 # %% [markdown]
 # ## 1. Create a synthetic 10x10x10 uint8 input volume
@@ -105,8 +104,7 @@ assert input_data.shape == (10, 10, 10), (
     f"Expected input shape (10, 10, 10), got {input_data.shape}"
 )
 assert output_data.shape == (1, 10, 10, 10), (
-    f"Expected output shape (1, 10, 10, 10) "
-    f"(channel-first 3D), got {output_data.shape}"
+    f"Expected output shape (1, 10, 10, 10) (channel-first 3D), got {output_data.shape}"
 )
 
 print("Success! 10x10x10 input -> (10, 10, 10) output as expected.")

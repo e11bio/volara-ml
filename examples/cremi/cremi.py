@@ -61,6 +61,7 @@ pred_size_growth = Coordinate(0, 0, 0)
 
 # %%
 from volara.datasets import Affs, Raw
+
 from volara_ml.blockwise import Predict
 from volara_ml.models import TorchModel
 
@@ -115,9 +116,8 @@ predict_cremi.run_blockwise(multiprocessing=False)
 # Let's visualize the results
 
 # %%
-import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-
+import matplotlib.pyplot as plt
 
 fig, axes = plt.subplots(1, 3, figsize=(14, 8))
 
