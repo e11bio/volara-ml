@@ -17,16 +17,21 @@ dependencies = [
 torch = ["torch>=2.4"]
 jax = ["jax>=0.4.30", "flax>=0.8", "orbax-checkpoint>=0.5"]
 
+[project.urls]
+Documentation = "https://e11bio.github.io/volara-ml"
+Source = "https://github.com/e11bio/volara-ml"
+Issues = "https://github.com/e11bio/volara-ml/issues"
+
 [dependency-groups]
 # Installed by `uv sync` (PEP 735); not part of the published package.
-# ruff and ty are pinned with == until uv.lock is committed: both change
-# their rule sets between releases. The tests need a backend: install it
-# with `uv sync --extra torch` (and/or `--extra jax`).
+# ruff and ty versions come from uv.lock; `uv lock --upgrade` moves them.
+# The tests need a backend: install it with `uv sync --extra torch` (and/or
+# `--extra jax`).
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
-    "ruff==0.17.3",
-    "ty==0.0.96",
+    "ruff>=0.17.3",
+    "ty>=0.0.96",
 ]
 docs = [
     "autodoc_pydantic>=2.0",
@@ -78,3 +83,14 @@ ignore = ["E501"]  # the formatter owns line length
 "tutorials/**/*.py" = ["E402"]  # jupytext cells import mid-file
 "examples/**/*.py" = ["E402"]
 "__init__.py" = ["F401"]  # re-exports
+
+[tool.coverage.run]
+branch = true
+source = ["volara_ml"]
+
+[tool.coverage.report]
+# Floor measured from the first branch-enabled run; raise it when measured
+# coverage is two or more points ahead, never lower it without saying why.
+fail_under = 43
+show_missing = true
+skip_covered = true
