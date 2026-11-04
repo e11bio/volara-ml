@@ -24,14 +24,14 @@ Issues = "https://github.com/e11bio/volara-ml/issues"
 
 [dependency-groups]
 # Installed by `uv sync` (PEP 735); not part of the published package.
-# ruff and ty are pinned with == until uv.lock is committed: both change
-# their rule sets between releases. The tests need a backend: install it
-# with `uv sync --extra torch` (and/or `--extra jax`).
+# ruff and ty versions come from uv.lock; `uv lock --upgrade` moves them.
+# The tests need a backend: install it with `uv sync --extra torch` (and/or
+# `--extra jax`).
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
-    "ruff==0.17.3",
-    "ty==0.0.96",
+    "ruff>=0.17.3",
+    "ty>=0.0.96",
 ]
 docs = [
     "autodoc_pydantic>=2.0",
