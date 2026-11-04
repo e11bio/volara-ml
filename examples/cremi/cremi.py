@@ -127,6 +127,7 @@ for i, (raw_slice, affs_slice, lsd_slice) in enumerate(
         raw_dataset.array("r")[:],
         affs_dataset.array("r")[:].transpose([1, 0, 2, 3]),
         lsds_dataset.array("r")[:].transpose([1, 0, 2, 3]),
+        strict=False,
     )
 ):
     # Show the raw data

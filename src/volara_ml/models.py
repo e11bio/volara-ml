@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import gc
 from abc import ABC, abstractmethod
+from collections.abc import Callable, Generator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Callable, Generator, Literal
+from typing import TYPE_CHECKING, Any, Literal
 
 import numpy as np
 from funlib.geometry import Coordinate
@@ -192,7 +193,7 @@ class TorchModel(Model):
     model.state_dict() dictionary."""
     pred_size_growth: PydanticCoordinate | None = None
 
-    def model(self) -> "torch.nn.Module":
+    def model(self) -> torch.nn.Module:
         import torch
 
         model = torch.load(self.save_path, map_location="cpu", weights_only=False)

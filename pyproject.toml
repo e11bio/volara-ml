@@ -47,17 +47,34 @@ docs = [
 [project.entry-points."volara.blockwise_tasks"]
 predict = "volara_ml.blockwise.predict:Predict"
 
-[tool.ruff]
-lint.select = ["F", "W", "I001"]
+[tool.ty.src]
+include = ["src", "tests"]
+exclude = []  # only ever shrinks
 
-[[tool.mypy.overrides]]
-module = [
-    "daisy.*",
-    "gunpowder.*",
-]
-ignore_missing_imports = true
+[tool.ty.terminal]
+# warn-level rules are recorded counters, not failures
+error-on-warning = false
+
+[tool.ty.rules]
+# Predict narrows volara's base task fields (fit, read_write_conflict) to
+# Literal values; ty reports that as invalid-mutable-override. Recorded as a
+# warning to promote once volara types the base fields as the unions.
+invalid-mutable-override = "warn"
 
 [tool.pytest.ini_options]
 pythonpath = [
   "src"
 ]
+
+[tool.ruff]
+line-length = 88
+extend-exclude = ["docs/build"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]  # the formatter owns line length
+
+[tool.ruff.lint.per-file-ignores]
+"tutorials/**/*.py" = ["E402"]  # jupytext cells import mid-file
+"examples/**/*.py" = ["E402"]
+"__init__.py" = ["F401"]  # re-exports
