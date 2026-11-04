@@ -47,12 +47,19 @@ docs = [
 [project.entry-points."volara.blockwise_tasks"]
 predict = "volara_ml.blockwise.predict:Predict"
 
-[[tool.mypy.overrides]]
-module = [
-    "daisy.*",
-    "gunpowder.*",
-]
-ignore_missing_imports = true
+[tool.ty.src]
+include = ["src", "tests"]
+exclude = []  # only ever shrinks
+
+[tool.ty.terminal]
+# warn-level rules are recorded counters, not failures
+error-on-warning = false
+
+[tool.ty.rules]
+# Predict narrows volara's base task fields (fit, read_write_conflict) to
+# Literal values; ty reports that as invalid-mutable-override. Recorded as a
+# warning to promote once volara types the base fields as the unions.
+invalid-mutable-override = "warn"
 
 [tool.pytest.ini_options]
 pythonpath = [
