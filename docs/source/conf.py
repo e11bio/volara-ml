@@ -19,7 +19,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 # -- Project information -----------------------------------------------------
 
-project = "Volara"
+project = "volara-ml"
 copyright = "2024, William Patton, Arlo Sheridan"
 author = "William Patton, Arlo Sheridan"
 
@@ -40,9 +40,6 @@ extensions = [
     "myst_parser",  # include md files in rst files
 ]
 
-nbsphinx_custom_formats = {
-    ".py": ["jupytext.reads", {"fmt", "py:percent"}],
-}
 nbsphinx_kernel_name = "volara_env"
 
 # Add any paths that contain templates here, relative to this directory.
@@ -65,5 +62,11 @@ html_theme = "sphinx_rtd_theme"
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ["_static"]
 html_css_files = [
-    "css/custom.css",
+    "custom.css",
 ]
+
+# Import the blockwise module before autodoc documents volara_ml.models: once
+# autodoc has inspected the models, the gunpowder -> funlib.persistence -> iohub
+# import chain fails inside pydantic, while the same imports succeed in a plain
+# interpreter in either order.
+import volara_ml.blockwise  # noqa: E402, F401

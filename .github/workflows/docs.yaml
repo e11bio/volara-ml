@@ -23,7 +23,8 @@ jobs:
           uv run jupytext --to notebook ./examples/cremi/cremi.py
           uv run jupytext --to notebook ./examples/jax/identity.py
           cp -r examples docs/source
-          uv run sphinx-build docs/source docs/build/html -b html
+          find docs/source/examples -name '*.py' -delete   # nbsphinx renders the notebooks
+          uv run sphinx-build -W docs/source docs/build/html -b html
       - uses: actions/upload-pages-artifact@v3
         with:
           path: docs/build/html
