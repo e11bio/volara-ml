@@ -53,7 +53,7 @@ docs = [
 predict = "volara_ml.blockwise.predict:Predict"
 
 [tool.ty.src]
-include = ["src", "tests"]
+include = ["src", "tests", "benchmarks"]
 exclude = []  # only ever shrinks
 
 [tool.ty.terminal]
@@ -70,6 +70,8 @@ invalid-mutable-override = "warn"
 pythonpath = [
   "src"
 ]
+testpaths = ["tests"]
+addopts = "--cov --cov-report=term-missing"
 
 [tool.ruff]
 line-length = 88

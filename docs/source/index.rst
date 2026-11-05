@@ -7,6 +7,7 @@
    examples/cremi/cremi
    examples/jax/identity
    api
+   benchmarks
 
 .. include:: ../../README.md
    :parser: myst_parser.sphinx_
