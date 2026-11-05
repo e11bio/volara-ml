@@ -70,6 +70,8 @@ invalid-mutable-override = "warn"
 pythonpath = [
   "src"
 ]
+testpaths = ["tests"]
+addopts = "--cov --cov-report=term-missing"
 
 [tool.ruff]
 line-length = 88

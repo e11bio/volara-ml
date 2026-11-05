@@ -28,7 +28,8 @@ git clone https://github.com/e11bio/volara-ml
 cd volara-ml
 uv sync --extra torch --extra jax                   # dev tools + both backends (from uv.lock)
 uv pip install -e .                                 # the package itself (no build backend yet)
-uv run pytest tests                                 # tests with coverage
+uv run pytest                                       # tests with coverage
+uv run pytest --no-cov tests/<file>.py              # one file, without the coverage floor
 uv run --only-group dev ruff check . && uv run --only-group dev ruff format --check .
 uv run ty check                                     # types
 # docs: see .github/workflows/docs.yaml (notebooks are converted before sphinx-build)
