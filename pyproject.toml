@@ -5,7 +5,7 @@ description = "Plugin for Volara including ML-related tasks. This includes the `
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "volara>=1.0.4",
+    "volara>=2.1.1",
     "daisy>=1.2.2",
     "gunpowder>=1.5.0",
     "funlib.geometry>=0.3",
