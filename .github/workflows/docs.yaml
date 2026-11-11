@@ -26,8 +26,6 @@ jobs:
       - uses: astral-sh/setup-uv@v6
       - uses: pandoc/actions/setup@v1
       - run: uv sync --locked --group docs --extra torch --extra jax
-      # no [build-system] yet, so uv sync --locked does not install the package itself
-      - run: uv pip install .
       - name: Build documentation
         run: |
           uv run python -m ipykernel install --name volara_env --user

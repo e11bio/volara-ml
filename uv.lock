@@ -6728,7 +6728,7 @@ wheels = [
 [[package]]
 name = "volara-ml"
 version = "1.2.0"
-source = { virtual = "." }
+source = { editable = "." }
 dependencies = [
     { name = "daisy" },
     { name = "funlib-geometry" },
