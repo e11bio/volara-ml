@@ -56,6 +56,10 @@ docs = [
 [project.entry-points."volara.blockwise_tasks"]
 predict = "volara_ml.blockwise.predict:Predict"
 
+[tool.setuptools.package-data]
+# PEP 561 marker; setuptools ships it only when listed here.
+volara_ml = ["py.typed"]
+
 [tool.ty.src]
 include = ["src", "tests", "benchmarks"]
 exclude = []  # only ever shrinks
