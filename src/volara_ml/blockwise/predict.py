@@ -95,8 +95,11 @@ class Predict(BlockwiseTask):
     in_data: Raw
     out_data: list[OutDataType | None]
 
-    fit: Literal["overhang"] = "overhang"
-    read_write_conflict: Literal[False] = False
+    # volara declares these base fields as `str` and `bool`; narrowing them is
+    # how every volara task fixes its value. Drop the ignores once volara types
+    # the base fields so that a narrowed override is accepted.
+    fit: Literal["overhang"] = "overhang"  # ty: ignore[invalid-mutable-override]
+    read_write_conflict: Literal[False] = False  # ty: ignore[invalid-mutable-override]
 
     @property
     def out_array_dtype(self) -> np.dtype:
