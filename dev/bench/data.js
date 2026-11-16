@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794596442288,
+  "lastUpdate": 1794858044684,
   "repoUrl": "https://github.com/e11bio/volara-ml",
   "entries": {
     "volara-ml": [
@@ -68,6 +68,41 @@ window.BENCHMARK_DATA = {
           {
             "name": "pytest wall time",
             "value": 15.186,
+            "unit": "s",
+            "extra": "`uv run pytest --cov-report=xml` in the tests job"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "William Patton",
+            "username": "pattonw",
+            "email": "wllmpttn24@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "c51c11f00ed58bc37ed94a56aaad67f4969c39d0",
+          "message": "Merge pull request #10 from e11bio/fix/uv-ty-standard\n\nTest on CPython 3.14, README matches CI, ty fails on warnings",
+          "timestamp": "2026-11-16T19:38:23Z",
+          "url": "https://github.com/e11bio/volara-ml/commit/c51c11f00ed58bc37ed94a56aaad67f4969c39d0"
+        },
+        "date": 1794858043836,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "import volara_ml.models, volara_ml.blockwise (cold)",
+            "value": 3312.887,
+            "range": "± 660.804",
+            "unit": "ms",
+            "extra": "interpreter startup 8.2 ms subtracted; n=10"
+          },
+          {
+            "name": "pytest wall time",
+            "value": 12.623,
             "unit": "s",
             "extra": "`uv run pytest --cov-report=xml` in the tests job"
           }
