@@ -11,12 +11,12 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # requires-python floor and the newest interpreter numba (via volara) supports
-        python-version: ["3.12", "3.13"]
+        # requires-python floor and the newest CPython
+        python-version: ["3.12", "3.14"]
         resolution: ["highest", "lowest-direct"]
         exclude:
-          # lowest-direct on the newest interpreter: the torch 2.4 floor has no 3.13 wheels
-          - python-version: "3.13"
+          # lowest-direct on the newest interpreter: the torch 2.4 floor has no 3.14 wheels
+          - python-version: "3.14"
             resolution: lowest-direct
     services:
       postgres:
@@ -37,8 +37,8 @@ jobs:
       # the lowest-direct leg never tested the declared floors.
       UV_RESOLUTION: ${{ matrix.resolution }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: astral-sh/setup-uv@v6
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v7
         with:
           python-version: ${{ matrix.python-version }}
       - run: uv sync --extra torch --extra jax
@@ -51,11 +51,11 @@ jobs:
       - if: github.event_name != 'pull_request' && matrix.python-version == '3.12' && matrix.resolution == 'highest'
         run: uv run python benchmarks/run.py --pytest-seconds "$PYTEST_SECONDS" --pytest-command "uv run pytest --cov-report=xml"
       - if: github.event_name != 'pull_request' && matrix.python-version == '3.12' && matrix.resolution == 'highest'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: benchmark
           path: benchmarks/output.json
-      - uses: codecov/codecov-action@v5
+      - uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           fail_ci_if_error: false

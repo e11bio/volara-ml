@@ -65,19 +65,10 @@ include = ["src", "tests", "benchmarks"]
 exclude = []  # only ever shrinks
 
 [tool.ty.terminal]
-# warn-level rules are recorded counters, not failures
-error-on-warning = false
-
-[tool.ty.rules]
-# Predict narrows volara's base task fields (fit, read_write_conflict) to
-# Literal values; ty reports that as invalid-mutable-override. Recorded as a
-# warning to promote once volara types the base fields as the unions.
-invalid-mutable-override = "warn"
+# no rule is below error, so a warning fails the check
+error-on-warning = true
 
 [tool.pytest.ini_options]
-pythonpath = [
-  "src"
-]
 testpaths = ["tests"]
 addopts = "--cov --cov-report=term-missing"
 
@@ -104,3 +95,11 @@ source = ["volara_ml"]
 fail_under = 43
 show_missing = true
 skip_covered = true
+
+[tool.uv]
+# Lock only; not part of the published metadata. volara caps llvmlite below
+# 0.46 on Intel macOS, and uv would otherwise hold every platform at the
+# numba that cap allows (0.62), which has no CPython 3.14 wheels.
+constraint-dependencies = [
+    "numba>=0.63; python_full_version >= '3.14' and (sys_platform != 'darwin' or platform_machine != 'x86_64')",
+]
