@@ -81,7 +81,6 @@ raw_out = Raw(store=work_dir / "data.zarr/prediction")
 predict_task = Predict(
     in_data=raw_in,
     out_data=[raw_out],
-    out_array_dtype=np.dtype(np.float32),
     checkpoint=torch_model,
     num_workers=1,
 )
