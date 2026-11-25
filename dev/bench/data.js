@@ -1,5 +1,5 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1794858044684,
+  "lastUpdate": 1795623380657,
   "repoUrl": "https://github.com/e11bio/volara-ml",
   "entries": {
     "volara-ml": [
@@ -103,6 +103,41 @@ window.BENCHMARK_DATA = {
           {
             "name": "pytest wall time",
             "value": 12.623,
+            "unit": "s",
+            "extra": "`uv run pytest --cov-report=xml` in the tests job"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "William Patton",
+            "username": "pattonw",
+            "email": "wllmpttn24@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "aac427196f7b4af74b97b4d8ad2a54729194e303",
+          "message": "Merge pull request #13 from e11bio/tests/quality\n\nTests: specification-style rewrite, first Predict test; fix torch example",
+          "timestamp": "2026-11-25T16:13:52Z",
+          "url": "https://github.com/e11bio/volara-ml/commit/aac427196f7b4af74b97b4d8ad2a54729194e303"
+        },
+        "date": 1795623379763,
+        "tool": "customSmallerIsBetter",
+        "benches": [
+          {
+            "name": "import volara_ml.models, volara_ml.blockwise (cold)",
+            "value": 4037.688,
+            "range": "± 113.564",
+            "unit": "ms",
+            "extra": "interpreter startup 9.0 ms subtracted; n=10"
+          },
+          {
+            "name": "pytest wall time",
+            "value": 20.065,
             "unit": "s",
             "extra": "`uv run pytest --cov-report=xml` in the tests job"
           }
